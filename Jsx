@@ -1,0 +1,51 @@
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+
+function App() {
+  const [bitcoinPrice, setBitcoinPrice] = useState(null);
+  const [tradeAmount, setTradeAmount] = useState("");
+  const [prediction, setPrediction] = useState("up");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const fetchPrice = async () => {
+      const response = await axios.get("http://localhost:5000/api/price");
+      setBitcoinPrice(response.data.price);
+    };
+    fetchPrice();
+    const interval = setInterval(fetchPrice, 5000); // Refresh every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleTrade = async () => {
+    const response = await axios.post("http://localhost:5000/api/trade", {
+      amount: tradeAmount,
+      prediction,
+    });
+    setMessage(response.data.message);
+  };
+
+  return (
+    <div>
+      <h1>Binary Trading Platform</h1>
+      <p>Current Bitcoin Price: {bitcoinPrice || "Loading..."}</p>
+      <input
+        type="number"
+        placeholder="Trade Amount"
+        value={tradeAmount}
+        onChange={(e) => setTradeAmount(e.target.value)}
+      />
+      <select
+        value={prediction}
+        onChange={(e) => setPrediction(e.target.value)}
+      >
+        <option value="up">Up</option>
+        <option value="down">Down</option>
+      </select>
+      <button onClick={handleTrade}>Place Trade</button>
+      <p>{message}</p>
+    </div>
+  );
+}
+
+export default App;
